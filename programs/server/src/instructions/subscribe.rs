@@ -1,14 +1,15 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    state::{Repo, RepoPayload, Subscription},
+    state::{Admin, Repo, RepoPayload, Subscription},
     utils::{Coupon, CustomError},
 };
 
 pub fn subscribe(ctx: Context<Subscribe>, payload: SubscribePayload) -> Result<()> {
-    payload
-        .coupon
-        .verify(&payload.user_id.try_to_vec().unwrap())?;
+    payload.coupon.verify(
+        &payload.user_id.try_to_vec().unwrap(),
+        &ctx.accounts.admin.be,
+    )?;
     require!(ctx.accounts.repo.approved, CustomError::UnapprovedRepo);
 
     ctx.accounts.subscription.initialize(
@@ -39,6 +40,11 @@ pub struct Subscribe<'info> {
     bump,
   )]
     pub repo: Account<'info, Repo>,
+    #[account(
+        seeds = [b"ADMIN"],
+        bump,
+    )]
+    pub admin: Account<'info, Admin>,
     #[account(
     init,
     seeds = [b"sub", payload.user_id.as_bytes(), repo.key().as_ref()],

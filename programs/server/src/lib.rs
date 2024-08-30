@@ -5,10 +5,10 @@ pub mod instructions;
 pub mod state;
 pub mod utils;
 
-declare_id!("8Jy1eMYr3fjGHBAbW5ebT5tTssXtB4BQpWRzZRHk4HMg");
+declare_id!("7dPueMoFZHG9Ae1GFX2FdVcZTjqFsvV6EhsUvW8Hhg8o");
 
 #[program]
-pub mod smart_contract {
+pub mod server {
 
     use super::*;
 
@@ -24,8 +24,8 @@ pub mod smart_contract {
         instructions::verify_coupon::verify_coupon(ctx, payload)
     }
 
-    pub fn init_token(ctx: Context<InitToken>) -> Result<()> {
-        instructions::init_token::init_token(ctx)
+    pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
+        instructions::init::init(ctx, payload)
     }
 
     pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -> Result<()> {

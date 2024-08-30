@@ -5,12 +5,14 @@ use anchor_spl::{
 };
 
 use crate::{
-    state::{Claim, Repo, RepoPayload, Subscription},
+    state::{Admin, Claim, Repo, RepoPayload, Subscription},
     utils::{Coupon, CustomError},
 };
 
 pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -> Result<()> {
-    payload.coupon.verify(&payload.claim.serialize())?;
+    payload
+        .coupon
+        .verify(&payload.claim.serialize(), &ctx.accounts.admin.be)?;
     require!(
         payload.claim.timestamp > ctx.accounts.subscription.last_claim,
         CustomError::ClaimedAlready
@@ -62,6 +64,11 @@ pub struct ClaimRewards<'info> {
         bump,
     )]
     pub repo: Account<'info, Repo>,
+    #[account(
+        seeds = [b"ADMIN"],
+        bump,
+    )]
+    pub admin: Account<'info, Admin>,
     #[account(
         mut,
         seeds = [b"sub", payload.claim.user_id.as_bytes() ,repo.key().as_ref()],

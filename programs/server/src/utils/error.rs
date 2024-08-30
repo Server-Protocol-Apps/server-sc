@@ -10,4 +10,6 @@ pub enum CustomError {
     InvalidCoupon,
     #[msg("Repo needs to be approved")]
     UnapprovedRepo,
+    #[msg("Admin only")]
+    AdminOnly,
 }

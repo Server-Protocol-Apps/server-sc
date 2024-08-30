@@ -15,9 +15,7 @@ pub struct Coupon {
 }
 
 impl Coupon {
-    const ADMIN_PUB_KEY: &'static str = "52a51c1bef8056119d5f114af2d71a2e978a9b260e1a156c2af1a1643291b0e90c38da6d1bef18fc80588dddfc5344638954482c7de6613a0c5eef6ec2e36ee3";
-
-    pub fn verify(&self, serialized_data: &Vec<u8>) -> Result<String, CustomError> {
+    pub fn verify(&self, serialized_data: &Vec<u8>, be: &[u8; 64]) -> Result<(), CustomError> {
         msg!("Validating coupon");
         let hash = self.hash(serialized_data);
 
@@ -25,14 +23,13 @@ impl Coupon {
 
         let recovered_pubkey: Secp256k1Pubkey =
             secp256k1_recover(&hash, self.recovery_id, signature).unwrap();
-        let recovered_pubkey_hex = hex::encode(recovered_pubkey.0);
 
-        if recovered_pubkey_hex.ne(Coupon::ADMIN_PUB_KEY) {
+        if recovered_pubkey.0.ne(be) {
             msg!("Invalid coupon");
-            return Err(CustomError::InvalidCoupon.into());
+            return Err(CustomError::InvalidCoupon);
         }
         msg!("Valid coupon");
-        Ok(recovered_pubkey_hex)
+        Ok(())
     }
 
     fn hash(&self, serialized_data: &Vec<u8>) -> [u8; HASH_BYTES] {

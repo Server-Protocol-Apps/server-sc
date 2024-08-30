@@ -1,11 +1,11 @@
-use crate::{state::{Repo,RepoPayload}, utils::Coupon};
+use crate::{state::{Admin, Repo, RepoPayload}, utils::Coupon};
 use anchor_lang::prelude::*;
 
 pub fn add_repo(
         ctx: Context<AddRepo>,
         payload: AddRepoPayload,
     )-> Result<()> {
-        payload.coupon.verify(&payload.repo.serialize())?;
+        payload.coupon.verify(&payload.repo.serialize(), &ctx.accounts.admin.be)?;
 
         let publisher = ctx.accounts.publisher.key();
         let repo = &mut ctx.accounts.repo;
@@ -40,6 +40,11 @@ pub struct AddRepo<'info> {
         space = Repo::size(&payload.repo.name, &payload.repo.owner, &payload.repo.branch) 
     )]
     pub repo: Account<'info, Repo>,
+    #[account(
+        seeds = [b"ADMIN"],
+        bump,
+    )]
+    pub admin: Account<'info, Admin>,
     #[account(mut)]
     pub publisher: Signer<'info>,
     pub system_program: Program<'info, System>,

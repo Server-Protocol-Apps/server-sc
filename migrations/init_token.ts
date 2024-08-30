@@ -1,3 +1,6 @@
+// Migrations are an early feature. Currently, they're nothing more than this
+// single deploy script that's invoked from the CLI, injecting a provider
+// configured from the workspace's Anchor.toml.
 require("dotenv").config();
 import { AnchorProvider } from "@coral-xyz/anchor";
 
@@ -38,7 +41,7 @@ const init = async () => {
   );
   const wallet = new anchor.Wallet(keypair);
   const provider = new AnchorProvider(
-    new anchor.web3.Connection("https://api.devnet.solana.com"),
+    new anchor.web3.Connection("http://127.0.0.1:8899"),
     wallet
   );
 

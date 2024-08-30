@@ -1,12 +1,14 @@
-use crate::utils::{ADMIN_PUBKEY, MPL_TOKEN_METADATA_ID};
+use crate::{state::Admin, utils::MPL_TOKEN_METADATA_ID};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 use mpl_token_metadata::instructions::CreateV1CpiBuilder;
 
-pub fn init_token(ctx: Context<InitToken>) -> Result<()> {
+pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
     let seed = b"token";
     let bump = ctx.bumps.token_mint;
     let signer: &[&[&[u8]]] = &[&[seed, &[bump]]];
+
+    ctx.accounts.admin_info.init(payload);
 
     CreateV1CpiBuilder::new(
         ctx.accounts
@@ -33,9 +35,15 @@ pub fn init_token(ctx: Context<InitToken>) -> Result<()> {
     Ok(())
 }
 
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
+pub struct InitPayload {
+    pub signer: Pubkey,
+    pub be: [u8; 64],
+}
+
 #[derive(Accounts)]
 pub struct InitToken<'info> {
-    #[account(mut, address = ADMIN_PUBKEY)]
+    #[account(mut)]
     pub admin: Signer<'info>,
     #[account(
         init,
@@ -46,6 +54,14 @@ pub struct InitToken<'info> {
         mint::authority=token_mint
     )]
     pub token_mint: Account<'info, Mint>,
+    #[account(
+      init,
+      space = Admin::LEN,
+      payer = admin,
+      seeds = [b"ADMIN"],
+      bump,
+    )]
+    pub admin_info: Account<'info, Admin>,
     /// CHECK: New Metaplex Account being created
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::{borsh::BorshSerialize, *};
 
-use crate::utils::Coupon;
+use crate::{state::Admin, utils::Coupon};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct OffChainData {
@@ -15,7 +15,9 @@ pub struct VerifyCouponPayload {
 }
 
 pub fn verify_coupon(_ctx: Context<VerifyCoupon>, payload: VerifyCouponPayload) -> Result<()> {
-    let recovered_pubkey = payload.coupon.verify(&payload.data.try_to_vec().unwrap())?;
+    let recovered_pubkey = payload
+        .coupon
+        .verify(&payload.data.try_to_vec().unwrap(), &_ctx.accounts.admin.be)?;
 
     msg!("Recovered pub key {:?}", recovered_pubkey);
 
@@ -27,5 +29,10 @@ pub fn verify_coupon(_ctx: Context<VerifyCoupon>, payload: VerifyCouponPayload) 
 pub struct VerifyCoupon<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+    #[account(
+        seeds = [b"ADMIN"],
+        bump,
+    )]
+    pub admin: Account<'info, Admin>,
     pub system_program: Program<'info, System>,
 }
