@@ -35,4 +35,14 @@ pub mod server {
     pub fn subscribe(ctx: Context<Subscribe>, payload: SubscribePayload) -> Result<()> {
         instructions::subscribe::subscribe(ctx, payload)
     }
+
+    // ADMIN
+
+    pub fn set_be(ctx: Context<ManageAdmin>, payload: [u8; 64]) -> Result<()> {
+        instructions::set_be(ctx, payload)
+    }
+
+    pub fn set_signer(ctx: Context<ManageAdmin>, payload: Pubkey) -> Result<()> {
+        instructions::set_signer(ctx, payload)
+    }
 }
