@@ -2,7 +2,7 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "init_token": "ts-node migrations/init_token.ts"
+    "init": "ts-node scripts/init.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.0"

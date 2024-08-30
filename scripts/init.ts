@@ -1,11 +1,7 @@
-// Migrations are an early feature. Currently, they're nothing more than this
-// single deploy script that's invoked from the CLI, injecting a provider
-// configured from the workspace's Anchor.toml.
 require("dotenv").config();
-import { AnchorProvider } from "@coral-xyz/anchor";
-
+import { bs58, hex } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import * as anchor from "@coral-xyz/anchor";
-import idl from "../target/idl/smart_contract.json";
+import idl from "../target/idl/server.json";
 
 const showLogs = async ({ program, tx }) => {
   const connection = program.provider.connection;
@@ -31,22 +27,17 @@ const showLogs = async ({ program, tx }) => {
 
 const init = async () => {
   // // Configure client to use the provider.
+
+  const be: number[] = [...hex.decode(process.env.BE_PUB)];
   const keypair = anchor.web3.Keypair.fromSecretKey(
-    Buffer.from([
-      163, 195, 1, 85, 200, 56, 22, 141, 5, 64, 134, 41, 51, 112, 8, 2, 157,
-      193, 154, 122, 16, 111, 250, 87, 35, 113, 154, 229, 82, 99, 241, 29, 243,
-      184, 171, 13, 177, 95, 97, 37, 43, 189, 79, 104, 142, 242, 194, 174, 23,
-      246, 53, 176, 66, 253, 33, 144, 64, 169, 84, 217, 52, 137, 145, 162,
-    ])
+    bs58.decode(process.env.ADMIN_PRIV_KEY)
   );
   const wallet = new anchor.Wallet(keypair);
-  const provider = new AnchorProvider(
+  const provider = new anchor.AnchorProvider(
     new anchor.web3.Connection("http://127.0.0.1:8899"),
     wallet
   );
-
   const program = new anchor.Program(idl as anchor.Idl, provider);
-
   const [mint] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("token")],
     program.programId
@@ -65,7 +56,10 @@ const init = async () => {
   );
 
   const tx = await program.methods
-    .initToken()
+    .init({
+      signer: keypair.publicKey,
+      be,
+    })
     .accounts({ metadata })
     .signers([wallet.payer])
     .rpc()

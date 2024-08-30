@@ -53,7 +53,7 @@ export const generateHashBuffer = (values: Uint8Array) => {
   return keccak256(Buffer.from(values));
 };
 
-export const admin = new Wallet(process.env.ADMIN_PRIV_KEY);
+export const admin = new Wallet(process.env.BE_PRIV);
 
 export const showLogs = async ({ program, tx }) => {
   const connection = program.provider.connection;

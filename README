@@ -1,0 +1,73 @@
+## ¿Cómo funciona?
+
+En Solana, se interacciona con los contratos a través de instrucciones, cada instrucción tiene un contexto y un payload opcional,
+las intrucciones estan dentro de _instructions_ y dependen de los tipos definidos en **state**
+
+Solana procesa las transacciones en paralelo y, para eso, necesita saber que datos van a ser modificados
+
+Através del contexto es como dejamos saber a Solana que datos vamos a tocar
+
+Declaramos los datos que vamos a leer, añadir o modificar junto al tipo que tendrán
+
+En add_repo.rs, el contexto es el siguiente:
+
+```
+#[derive(Accounts)]
+#[instruction(payload: AddRepoPayload)]
+pub struct AddRepo<'info> {
+   #[account(
+       init,
+       seeds = [b"repo", ...],
+       bump,
+       payer = publisher,
+       space = Repo::size(...)
+   )]
+   pub repo: Account<'info, Repo>,
+   #[account(
+       seeds = [b"ADMIN"],
+       bump,
+   )]
+   pub admin: Account<'info, Admin>,
+   #[account(mut)]
+   pub publisher: Signer<'info>,
+   pub system_program: Program<'info, System>,
+}
+```
+
+El contexto tiene 4 atributos, **repo**, **admin**, **publisher** y **system_program** y dice algo como esto:
+
+- Dame los datos del **admin** de este smart contract
+- Escribe en el smart contract un nuevo **repo**, sus valores estan en **payload**
+- Los gastos corren a cuenta de **publisher**
+- Y para poder guardar los datos del repositorio, vas a tener que usar **system_program**
+
+## Desplegar en local
+
+Para lanzar en local, hace falta tener instalado rust, anchor y solana CLI
+
+#### Asegurate de configurar solana CLI para que apunte a local, solana config get debería de parecerse a esto
+
+```
+Config File: /Users/kilojulio/.config/solana/cli/config.yml
+RPC URL: http://127.0.0.1:8899
+WebSocket URL: ws://127.0.0.1:8900/ (computed)
+Keypair Path: /Users/kilojulio/.config/solana/id.json
+Commitment: confirmed
+```
+
+#### Ejecutar el nodo donde desplegar en contrato
+
+`solana-test-validator -r --bpf-program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s metadata.so`
+
+#### Desplegar el contrato
+
+`anchor deploy`
+
+#### Inicializar el contrato
+
+`npm run init`
+
+## Desplegar a testnet o mainnet
+
+Los pasos son los mismos, solo hay que cambiar la configuración del solana CLI, asegurarse de que hay SOL suficiente en la cuenta
+donde apunta **Kepair Path** y cambiar la url de rpc en `scripts/init.ts`
