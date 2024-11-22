@@ -12,4 +12,6 @@ pub enum CustomError {
     UnapprovedRepo,
     #[msg("Admin only")]
     AdminOnly,
+    #[msg("Max supply exceeded")]
+    MaxSupplyExceeded,
 }

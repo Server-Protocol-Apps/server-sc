@@ -27,7 +27,20 @@ describe("init_token", () => {
 
   describe("happy path", () => {
     it("create token mint", async () => {
-      await program.methods.init(adminMock).accounts({ metadata }).rpc();
+      await program.methods
+        .init({
+          ...adminMock,
+          totalSupply: new anchor.BN(1000000000),
+          decimals: 8,
+          uri: "ey",
+          name: "SERVER",
+          symbol: "SERVER",
+          rewardsPercentage: 50,
+          teamPercentage: 15,
+          tokensPerCommit: new anchor.BN(1000),
+        })
+        .accounts({ metadata })
+        .rpc();
 
       const mintInfo = await provider.connection.getAccountInfo(mint);
 

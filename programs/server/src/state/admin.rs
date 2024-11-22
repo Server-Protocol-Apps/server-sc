@@ -17,7 +17,7 @@ impl Admin {
         self.be = be
     }
 
-    pub fn init(&mut self, init_payload: InitPayload) {
+    pub fn init(&mut self, init_payload: &InitPayload) {
         self.be = init_payload.be;
         self.signer = init_payload.signer
     }

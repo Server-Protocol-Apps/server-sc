@@ -1,4 +1,7 @@
-use crate::{state::Admin, utils::MPL_TOKEN_METADATA_ID};
+use crate::{
+    state::{Admin, Tokenomics},
+    utils::MPL_TOKEN_METADATA_ID,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 use mpl_token_metadata::instructions::CreateV1CpiBuilder;
@@ -8,7 +11,8 @@ pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
     let bump = ctx.bumps.token_mint;
     let signer: &[&[&[u8]]] = &[&[seed, &[bump]]];
 
-    ctx.accounts.admin_info.init(payload);
+    ctx.accounts.admin_info.init(&payload);
+    ctx.accounts.tokenomics.init(ctx.bumps.tokenomics, &payload);
 
     CreateV1CpiBuilder::new(
         ctx.accounts
@@ -21,11 +25,11 @@ pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
     .update_authority(ctx.accounts.token_mint.to_account_info().as_ref(), true)
     .system_program(ctx.accounts.system_program.to_account_info().as_ref())
     .payer(ctx.accounts.admin.to_account_info().as_ref())
-    .name(String::from("Origin"))
-    .uri(String::from("uri"))
+    .name(payload.name)
+    .uri(payload.uri)
     .is_mutable(true)
-    .decimals(9)
-    .symbol(String::from("ORIGIN"))
+    .decimals(payload.decimals)
+    .symbol(payload.symbol)
     .token_standard(mpl_token_metadata::types::TokenStandard::Fungible)
     .metadata(ctx.accounts.metadata.to_account_info().as_ref())
     .seller_fee_basis_points(0)
@@ -39,6 +43,14 @@ pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
 pub struct InitPayload {
     pub signer: Pubkey,
     pub be: [u8; 64],
+    pub decimals: u8,
+    pub uri: String,
+    pub name: String,
+    pub symbol: String,
+    pub total_supply: u64,
+    pub rewards_percentage: u8,
+    pub team_percentage: u8,
+    pub tokens_per_commit: u64,
 }
 
 #[derive(Accounts)]
@@ -54,6 +66,14 @@ pub struct InitToken<'info> {
         mint::authority=token_mint
     )]
     pub token_mint: Account<'info, Mint>,
+    #[account(
+        init,
+        seeds=[b"tokenomics"],
+        bump,
+        payer=admin,
+        space = Tokenomics::size(),
+    )]
+    pub tokenomics: Account<'info, Tokenomics>,
     #[account(
       init,
       space = Admin::LEN,

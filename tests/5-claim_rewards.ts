@@ -54,9 +54,9 @@ describe("claim_rewards", () => {
       );
       const reward = await program.account.subscription.fetch(rewardPda);
 
-      expect(balance.value.uiAmount).eq(10);
+      expect(balance.value.uiAmount).eq(10000);
 
-      expect(reward.totalClaimed.toNumber()).eq(10);
+      expect(reward.totalClaimed.toNumber()).eq(10000);
       expect(true).eq(true);
     });
   });

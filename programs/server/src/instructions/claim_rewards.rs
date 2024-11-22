@@ -5,8 +5,8 @@ use anchor_spl::{
 };
 
 use crate::{
-    state::{Admin, Claim, Repo, RepoPayload, Subscription},
-    utils::{Coupon, CustomError},
+    state::{Admin, Claim, Repo, RepoPayload, Subscription, Tokenomics},
+    utils::{calculate_internal_amount, Coupon, CustomError},
 };
 
 pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -> Result<()> {
@@ -22,13 +22,19 @@ pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -
     let bump = ctx.bumps.token;
     let signer: &[&[&[u8]]] = &[&[seed, &[bump]]];
 
+    let amount_to_mint = ctx
+        .accounts
+        .tokenomics
+        .amount_to_mint_for_reward(&payload.claim.commits)
+        .unwrap();
+
     ctx.accounts
         .subscription
-        .update_total_claimed(payload.claim.commits.into(), payload.claim.timestamp);
+        .update_total_claimed(amount_to_mint as u128, payload.claim.timestamp);
 
     ctx.accounts
         .repo
-        .update_total_claimed(payload.claim.commits.into());
+        .update_total_claimed(amount_to_mint as u128);
 
     mint_to(
         CpiContext::new_with_signer(
@@ -40,7 +46,7 @@ pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -
             },
             signer,
         ),
-        payload.claim.commits.checked_mul(1000000000).unwrap(),
+        calculate_internal_amount(amount_to_mint, ctx.accounts.token.decimals),
     )?;
 
     Ok(())
@@ -69,6 +75,11 @@ pub struct ClaimRewards<'info> {
         bump,
     )]
     pub admin: Account<'info, Admin>,
+    #[account(
+        seeds=[b"tokenomics"],
+        bump,
+    )]
+    pub tokenomics: Account<'info, Tokenomics>,
     #[account(
         mut,
         seeds = [b"sub", payload.claim.user_id.as_bytes() ,repo.key().as_ref()],
