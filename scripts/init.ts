@@ -34,7 +34,7 @@ const init = async () => {
   );
   const wallet = new anchor.Wallet(keypair);
   const provider = new anchor.AnchorProvider(
-    new anchor.web3.Connection("http://127.0.0.1:8899"),
+    new anchor.web3.Connection("https://api.devnet.solana.com"),
     wallet
   );
   const program = new anchor.Program(idl as anchor.Idl, provider);
@@ -59,6 +59,14 @@ const init = async () => {
     .init({
       signer: keypair.publicKey,
       be,
+      totalSupply: new anchor.BN(1000000000),
+      decimals: 2,
+      uri: "ey",
+      name: "SERVER",
+      symbol: "SERVER",
+      rewardsPercentage: 50,
+      teamPercentage: 15,
+      tokensPerCommit: new anchor.BN(1000),
     })
     .accounts({ metadata })
     .signers([wallet.payer])

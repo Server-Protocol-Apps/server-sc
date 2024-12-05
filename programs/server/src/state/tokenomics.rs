@@ -5,7 +5,6 @@ use crate::{utils::CustomError, InitPayload};
 #[account]
 pub struct Tokenomics {
     pub bump: u8,
-    pub decimals: u8,
     pub rewards_percentage: u8,
     pub team_percentage: u8,
     pub total_supply: u64,
@@ -23,7 +22,6 @@ impl Tokenomics {
     pub fn init(&mut self, bump: u8, payload: &InitPayload) {
         self.bump = bump;
 
-        self.decimals = payload.decimals;
         self.total_supply = payload.total_supply;
         self.rewards_percentage = payload.rewards_percentage;
         self.team_percentage = payload.team_percentage;
@@ -37,11 +35,15 @@ impl Tokenomics {
         self.total_supply
             .checked_mul(self.rewards_percentage as u64)
             .unwrap()
+            .checked_div(100)
+            .unwrap()
     }
 
     pub fn max_team_supply(&self) -> u64 {
         self.total_supply
             .checked_mul(self.team_percentage as u64)
+            .unwrap()
+            .checked_div(100)
             .unwrap()
     }
 
@@ -50,42 +52,59 @@ impl Tokenomics {
         max_supply: &u64,
         current_supply: &u64,
         amount_to_mint: &u64,
-    ) -> Result<u64> {
-        require!(current_supply < max_supply, CustomError::MaxSupplyExceeded);
+    ) -> Option<u64> {
+        if current_supply >= max_supply {
+            return None;
+        }
 
         let new_supply = amount_to_mint.checked_add(*current_supply).unwrap();
-
         if new_supply > *max_supply {
             let diff = max_supply
                 .checked_sub(self.current_rewarded_supply)
                 .unwrap();
-            return Ok(diff);
+            msg!("diff {:?}", diff);
+            return Some(diff);
         }
 
-        Ok(*amount_to_mint)
+        Some(*amount_to_mint)
     }
 
-    pub fn amount_to_mint_for_team(&mut self, amount: &u64) -> Result<u64> {
-        let amount_to_mint = self
-            .check_max_supply_exceeded(&self.max_team_supply(), &self.current_team_supply, amount)
+    pub fn amount_to_mint_for_team(&mut self, amount: &u64) -> Option<u64> {
+        let amount_to_mint = self.check_max_supply_exceeded(
+            &self.max_team_supply(),
+            &self.current_team_supply,
+            amount,
+        );
+
+        if None == amount_to_mint {
+            return None;
+        }
+
+        let unwrapped_amount_to_mint = amount_to_mint.unwrap();
+        self.current_team_supply = self
+            .current_team_supply
+            .checked_add(unwrapped_amount_to_mint)
             .unwrap();
 
-        self.current_team_supply += amount_to_mint;
-
-        Ok(amount_to_mint)
+        Some(unwrapped_amount_to_mint)
     }
 
-    pub fn amount_to_mint_for_reward(&mut self, commits: &u64) -> Result<u64> {
-        let amount_to_mint = self
-            .check_max_supply_exceeded(
-                &self.max_rewards_supply(),
-                &self.current_rewarded_supply,
-                &commits.checked_mul(self.tokens_per_commit).unwrap(),
-            )
+    pub fn amount_to_mint_for_reward(&mut self, commits: &u64) -> Option<u64> {
+        let amount_to_mint = self.check_max_supply_exceeded(
+            &self.max_rewards_supply(),
+            &self.current_rewarded_supply,
+            &commits.checked_mul(self.tokens_per_commit).unwrap(),
+        );
+        msg!("amount_to_mint {:?}", amount_to_mint);
+        if amount_to_mint == None {
+            return None;
+        }
+        let unwrapped_amount_to_mint = amount_to_mint.unwrap();
+        self.current_rewarded_supply = self
+            .current_rewarded_supply
+            .checked_add(unwrapped_amount_to_mint)
             .unwrap();
 
-        self.current_rewarded_supply += amount_to_mint;
-
-        Ok(amount_to_mint)
+        Some(unwrapped_amount_to_mint)
     }
 }

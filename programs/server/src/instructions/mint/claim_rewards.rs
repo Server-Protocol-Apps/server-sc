@@ -18,6 +18,11 @@ pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -
         CustomError::ClaimedAlready
     );
 
+    require!(
+        payload.claim.user_id == ctx.accounts.subscription.user_id,
+        CustomError::InvalidUser
+    );
+
     let seed = b"token";
     let bump = ctx.bumps.token;
     let signer: &[&[&[u8]]] = &[&[seed, &[bump]]];
@@ -25,17 +30,18 @@ pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -
     let amount_to_mint = ctx
         .accounts
         .tokenomics
-        .amount_to_mint_for_reward(&payload.claim.commits)
-        .unwrap();
+        .amount_to_mint_for_reward(&payload.claim.commits);
+
+    require!(amount_to_mint != None, CustomError::MaxSupplyExceeded);
+
+    let unwrapped_amount_to_mint = amount_to_mint.unwrap();
 
     ctx.accounts
         .subscription
-        .update_total_claimed(amount_to_mint as u128, payload.claim.timestamp);
-
+        .update_total_claimed(unwrapped_amount_to_mint as u128, payload.claim.timestamp);
     ctx.accounts
         .repo
-        .update_total_claimed(amount_to_mint as u128);
-
+        .update_total_claimed(unwrapped_amount_to_mint as u128);
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
@@ -46,7 +52,7 @@ pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -
             },
             signer,
         ),
-        calculate_internal_amount(amount_to_mint, ctx.accounts.token.decimals),
+        calculate_internal_amount(unwrapped_amount_to_mint, ctx.accounts.token.decimals),
     )?;
 
     Ok(())
@@ -76,6 +82,7 @@ pub struct ClaimRewards<'info> {
     )]
     pub admin: Account<'info, Admin>,
     #[account(
+        mut,
         seeds=[b"tokenomics"],
         bump,
     )]

@@ -14,4 +14,6 @@ pub enum CustomError {
     AdminOnly,
     #[msg("Max supply exceeded")]
     MaxSupplyExceeded,
+    #[msg("Invalid user")]
+    InvalidUser,
 }

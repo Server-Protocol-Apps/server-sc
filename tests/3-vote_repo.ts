@@ -13,7 +13,7 @@ describe("vote_repo", () => {
 
   describe("happy path", () => {
     it("vote down", async () => {
-      const a = await program.methods
+      await program.methods
         .voteRepo({
           repo: { owner: repo.owner, name: repo.name, branch: repo.branch },
           timestamp: new anchor.BN(Date.now()),

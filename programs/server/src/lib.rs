@@ -45,4 +45,8 @@ pub mod server {
     pub fn set_signer(ctx: Context<ManageAdmin>, payload: Pubkey) -> Result<()> {
         instructions::set_signer(ctx, payload)
     }
+
+    pub fn send_to_team_wallet(ctx: Context<MintToTeam>, amount: u64) -> Result<()> {
+        instructions::send_to_team(ctx, amount)
+    }
 }

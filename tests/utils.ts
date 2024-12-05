@@ -1,11 +1,10 @@
 require("dotenv").config();
-import { SignJWT } from "jose";
 import * as anchor from "@coral-xyz/anchor";
 import { Server } from "../target/types/server";
 import { HDNodeWallet, Wallet } from "ethers";
 import { keccak256, toBuffer, ecsign } from "ethereumjs-utils";
 import * as borsh from "borsh";
-import { bs58, hex } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+import { hex } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export const repo = {
   owner: "JulioMh",
@@ -20,6 +19,7 @@ anchor.setProvider(provider);
 export const adminMock = {
   signer: provider.wallet.publicKey,
   be: [...hex.decode(process.env.BE_PUB)],
+  teamWallet: anchor.web3.Keypair.generate().publicKey,
 };
 
 export const [repoPda] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -100,4 +100,26 @@ export const addRepo = async (provider, repo) => {
     })
     .accounts({ publisher: provider.publicKey })
     .rpc();
+};
+
+export const decodeMintAccountData = (data: Buffer) => {
+  const mintAuthorityOption = data.readUInt32LE(0);
+  const mintAuthority = mintAuthorityOption
+    ? new anchor.web3.PublicKey(data.slice(4, 36))
+    : null;
+  const supply = data.readBigUInt64LE(36);
+  const decimals = data.readUInt8(44);
+  const isInitialized = data.readUInt8(45) !== 0;
+  const freezeAuthorityOption = data.readUInt32LE(46);
+  const freezeAuthority = freezeAuthorityOption
+    ? new anchor.web3.PublicKey(data.slice(50, 82))
+    : null;
+
+  return {
+    mintAuthority: mintAuthority ? mintAuthority.toBase58() : null,
+    supply: supply.toString(),
+    decimals,
+    isInitialized,
+    freezeAuthority: freezeAuthority ? freezeAuthority.toBase58() : null,
+  };
 };

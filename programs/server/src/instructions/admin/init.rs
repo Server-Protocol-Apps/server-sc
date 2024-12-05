@@ -4,9 +4,10 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
-use mpl_token_metadata::instructions::CreateV1CpiBuilder;
+use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::DataV2};
 
 pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
+    msg!("{:?}", payload.decimals);
     let seed = b"token";
     let bump = ctx.bumps.token_mint;
     let signer: &[&[&[u8]]] = &[&[seed, &[bump]]];
@@ -28,12 +29,12 @@ pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
     .name(payload.name)
     .uri(payload.uri)
     .is_mutable(true)
-    .decimals(payload.decimals)
     .symbol(payload.symbol)
     .token_standard(mpl_token_metadata::types::TokenStandard::Fungible)
     .metadata(ctx.accounts.metadata.to_account_info().as_ref())
     .seller_fee_basis_points(0)
     .sysvar_instructions(ctx.accounts.rent.to_account_info().as_ref())
+    .decimals(2)
     .invoke_signed(signer)?;
 
     Ok(())
@@ -42,6 +43,7 @@ pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct InitPayload {
     pub signer: Pubkey,
+    pub team_wallet: Pubkey,
     pub be: [u8; 64],
     pub decimals: u8,
     pub uri: String,
@@ -54,6 +56,7 @@ pub struct InitPayload {
 }
 
 #[derive(Accounts)]
+#[instruction(payload: InitPayload)]
 pub struct InitToken<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -62,7 +65,7 @@ pub struct InitToken<'info> {
         seeds=[b"token"],
         bump,
         payer=admin,
-        mint::decimals=9,
+        mint::decimals=payload.decimals,
         mint::authority=token_mint
     )]
     pub token_mint: Account<'info, Mint>,
