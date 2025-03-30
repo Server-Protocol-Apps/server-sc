@@ -1,0 +1,114 @@
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+};
+
+use crate::{
+    state::{Admin, Claim, Repo, RepoPayload, Subscription, Tokenomics},
+    utils::{calculate_internal_amount, Coupon, CustomError},
+};
+
+pub fn claim_rewards(ctx: Context<ClaimRewards>, payload: ClaimRewardsPayload) -> Result<()> {
+    payload
+        .coupon
+        .verify(&payload.claim.serialize(), &ctx.accounts.admin.be)?;
+    require!(
+        payload.claim.timestamp > ctx.accounts.subscription.last_claim,
+        CustomError::ClaimedAlready
+    );
+
+    require!(
+        payload.claim.user_id == ctx.accounts.subscription.user_id,
+        CustomError::InvalidUser
+    );
+
+    let seed = b"token";
+    let bump = ctx.bumps.token;
+    let signer: &[&[&[u8]]] = &[&[seed, &[bump]]];
+
+    let amount_to_mint = ctx
+        .accounts
+        .tokenomics
+        .amount_to_mint_for_reward(&payload.claim.commits);
+
+    require!(amount_to_mint != None, CustomError::MaxSupplyExceeded);
+
+    let unwrapped_amount_to_mint = amount_to_mint.unwrap();
+
+    ctx.accounts
+        .subscription
+        .update_total_claimed(unwrapped_amount_to_mint as u128, payload.claim.timestamp);
+    ctx.accounts
+        .repo
+        .update_total_claimed(unwrapped_amount_to_mint as u128);
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                authority: ctx.accounts.token.to_account_info(),
+                mint: ctx.accounts.token.to_account_info(),
+                to: ctx.accounts.destination.to_account_info(),
+            },
+            signer,
+        ),
+        calculate_internal_amount(unwrapped_amount_to_mint, ctx.accounts.token.decimals),
+    )?;
+
+    Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
+pub struct ClaimRewardsPayload {
+    pub repo: RepoPayload,
+    pub claim: Claim,
+    pub coupon: Coupon,
+}
+
+#[derive(Accounts)]
+#[instruction(payload: ClaimRewardsPayload)]
+pub struct ClaimRewards<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"repo", payload.repo.owner.as_bytes(), payload.repo.name.as_bytes(), payload.repo.branch.as_bytes()],
+        bump,
+    )]
+    pub repo: Account<'info, Repo>,
+    #[account(
+        seeds = [b"ADMIN"],
+        bump,
+    )]
+    pub admin: Account<'info, Admin>,
+    #[account(
+        mut,
+        seeds=[b"tokenomics"],
+        bump,
+    )]
+    pub tokenomics: Account<'info, Tokenomics>,
+    #[account(
+        mut,
+        seeds = [b"sub", payload.claim.user_id.as_bytes() ,repo.key().as_ref()],
+        bump,
+    )]
+    pub subscription: Account<'info, Subscription>,
+    #[account(
+      mut,
+      seeds=[b"token"],
+      bump,
+      mint::authority=token
+    )]
+    pub token: Account<'info, Mint>,
+    #[account(
+      init_if_needed,
+      payer=signer,
+      associated_token::mint = token,
+      associated_token::authority = signer,
+    )]
+    pub destination: Account<'info, TokenAccount>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
