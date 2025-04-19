@@ -27,7 +27,7 @@ pub fn handler(ctx: Context<InitializeReputation>) -> Result<()> {
     account.last_updated_ts = clock.unix_timestamp;
     account.last_gain_day = clock.unix_timestamp / (24 * 60 * 60);
     account.daily_gain_count = 0;
-    account.bump = *ctx.bumps.get("reputation_account").unwrap();
+    account.bump = ctx.bumps.reputation_account;
 
     Ok(())
 }

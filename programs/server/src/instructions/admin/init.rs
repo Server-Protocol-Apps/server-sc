@@ -43,6 +43,8 @@ pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct InitPayload {
     pub signer: Pubkey,
+    pub team_wallet: Pubkey,
+    pub treasury_wallet: Pubkey,
     pub be: [u8; 64],
     pub decimals: u8,
     pub uri: String,
@@ -51,7 +53,6 @@ pub struct InitPayload {
     pub total_supply: u64,
     pub rewards_percentage: u8,
     pub team_percentage: u8,
-    pub staking_percentage: u8,
 }
 
 #[derive(Accounts)]

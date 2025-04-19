@@ -2,12 +2,12 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct Subscription {
-    pub bump: u8,            // 1
-    pub last_claim: u128,    // 16
-    pub total_claimed: u128, // 16
-    pub subscribed_at: u128, // 16
-    pub repo_pda: Pubkey,    // 32
-    pub user_id: String,     // 4 + len
+    pub bump: u8,
+    pub last_claim: u128,
+    pub total_claimed: u128,
+    pub subscribed_at: u128,
+    pub repo_pda: Pubkey,
+    pub user_id: String,
 }
 
 impl Subscription {

@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use crate::state::{Admin, StakingConfig};
-use crate::utils::CustomError;
 
 #[derive(Accounts)]
 pub struct SetStakingRate<'info> {

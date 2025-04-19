@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, MintTo, Token, TokenAccount, mint_to};
 
-use crate::{state::{ProjectGrant, Tokenomics}, utils::CustomError};
+use crate::{
+    state::{ProjectGrant, Tokenomics},
+    utils::CustomError,
+};
 
 #[derive(Accounts)]
 pub struct MintRewardFromGrant<'info> {
@@ -43,7 +46,9 @@ pub struct MintFromGrantPayload {
 
 pub fn handler(ctx: Context<MintRewardFromGrant>, payload: MintFromGrantPayload) -> Result<()> {
     let grant = &mut ctx.accounts.project_grant;
+    let tokenomics = &mut ctx.accounts.tokenomics;
 
+    // 1. Validar que no se excede el total asignado al grant
     let new_total = grant
         .total_claimed
         .checked_add(payload.amount)
@@ -54,30 +59,34 @@ pub fn handler(ctx: Context<MintRewardFromGrant>, payload: MintFromGrantPayload)
         CustomError::GrantExceeded
     );
 
-    // Actualizamos claim
-    grant.total_claimed = new_total;
-
-    // Validamos que estamos dentro del límite de supply de rewards
-    let mintable_amount = ctx
-        .accounts
-        .tokenomics
-        .amount_to_mint_for_reward(payload.amount)
+    // 2. Validar que no se excede el supply global de rewards
+    let mintable_amount = tokenomics
+        .check_max_supply_exceeded(
+            &tokenomics.max_rewards_supply(),
+            &tokenomics.current_rewarded_supply,
+            &payload.amount,
+        )
         .ok_or(CustomError::RewardsSupplyExceeded)?;
 
-    // Minteamos
-    let cpi_accounts = MintTo {
-        mint: ctx.accounts.token_mint.to_account_info(),
-        to: ctx.accounts.recipient.to_account_info(),
-        authority: ctx.accounts.token_mint.to_account_info(),
-    };
+    // 3. Actualizar estados
+    grant.total_claimed = new_total;
+    tokenomics.current_rewarded_supply = tokenomics
+        .current_rewarded_supply
+        .checked_add(mintable_amount)
+        .unwrap();
 
-    let signer_seeds = &[b"token", &[ctx.bumps.token_mint]];
+    // 4. Mintear tokens
+    let signer_seeds: &[&[u8]] = &[b"token", &[ctx.bumps.token_mint]];
     let signer = &[&signer_seeds[..]];
 
     mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            cpi_accounts,
+            MintTo {
+                mint: ctx.accounts.token_mint.to_account_info(),
+                to: ctx.accounts.recipient.to_account_info(),
+                authority: ctx.accounts.token_mint.to_account_info(),
+            },
             signer,
         ),
         mintable_amount,

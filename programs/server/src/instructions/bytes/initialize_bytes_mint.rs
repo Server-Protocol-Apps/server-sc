@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, InitializeMint, initialize_mint};
+use anchor_spl::token::{Mint, Token};
 
-use crate::utils::CustomError;
 
 #[derive(Accounts)]
 pub struct InitializeBytesMint<'info> {

@@ -20,10 +20,6 @@ pub mod server {
         instructions::vote_repo::vote_repo(ctx, payload)
     }
 
-    pub fn verify_coupon(ctx: Context<VerifyCoupon>, payload: VerifyCouponPayload) -> Result<()> {
-        instructions::verify_coupon::verify_coupon(ctx, payload)
-    }
-
     pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
         instructions::init::init(ctx, payload)
     }
@@ -74,6 +70,10 @@ pub mod server {
         instructions::update_team_wallet::handler(ctx, payload)
     }
 
+    pub fn set_treasury_wallet(ctx: Context<SetTreasuryWallet>, new_wallet: Pubkey) -> Result<()> {
+        instructions::set_treasury_wallet::handler(ctx, new_wallet)
+    }
+
     // STAKING
 
     pub fn stake_tokens(ctx: Context<StakeTokens>, amount: u64) -> Result<()> {
@@ -90,5 +90,15 @@ pub mod server {
 
     pub fn initialize_bytes_mint(ctx: Context<InitializeBytesMint>) -> Result<()> {
         instructions::bytes::initialize_bytes_mint::handler(ctx)
+    }
+
+    pub fn set_staking_rate(ctx: Context<SetStakingRate>, new_rate: u64) -> Result<()> {
+        instructions::set_staking_rate::handler(ctx, new_rate)
+    }
+
+    // REPUTATION
+
+    pub fn initialize_reputation(ctx: Context<InitializeReputation>) -> Result<()> {
+        instructions::reputation::initialize_reputation::handler(ctx)
     }
 }

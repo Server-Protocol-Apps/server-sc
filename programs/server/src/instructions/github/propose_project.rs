@@ -1,16 +1,16 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Burn, burn, Token, TokenAccount};
+use anchor_spl::token::{Burn, burn, Token, TokenAccount, Transfer, transfer};
 
 use crate::{
-    state::{Repo, RepoPayload, BytesUsage, Admin},
-    utils::{Coupon, CustomError, BYTES_MINT, SERVER_MINT, SERVER_DECIMALS},
+    state::{Repo, RepoPayload, BytesUsage, Admin, Reputation},
+    utils::{Coupon, CustomError, BYTES_MINT, SERVER_MINT, SERVER_DECIMALS, calculate_internal_amount},
 };
 
 pub fn handler(ctx: Context<ProposeProject>, payload: ProposeProjectPayload) -> Result<()> {
-    // 1. Verificar el cupón
+    // 1. Verificar cupón
     payload.coupon.verify(&payload.repo.serialize(), &ctx.accounts.admin.be)?;
 
-    // 2. Validar el mínimo de BYTES a quemar
+    // 2. Validar cantidad de BYTES a quemar
     require!(
         payload.bytes_used == 1_000_000,
         CustomError::InvalidProposalAmount
@@ -30,20 +30,25 @@ pub fn handler(ctx: Context<ProposeProject>, payload: ProposeProjectPayload) -> 
     )?;
 
     // 4. Quemar 100 $SERVER
-    let server_amount = 100 * 10u64.pow(SERVER_DECIMALS as u32);
-    burn(
+    let server_fee = calculate_internal_amount(100, SERVER_DECIMALS);
+    transfer(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
-            Burn {
-                mint: ctx.accounts.server_mint.to_account_info(),
+            Transfer {
                 from: ctx.accounts.user_server_ata.to_account_info(),
+                to: ctx.accounts.treasury_server_ata.to_account_info(),
                 authority: ctx.accounts.publisher.to_account_info(),
             },
         ),
-        server_amount,
+        server_fee,
     )?;
 
-    // 5. Crear el Repo
+    // 5. Reputación: aplicar decay y ganar 1 punto (máx 3/día, máx 20 total)
+    let clock = Clock::get()?;
+    ctx.accounts.reputation.apply_decay(clock.unix_timestamp);
+    ctx.accounts.reputation.update_after_bytes_use(clock.unix_timestamp);
+
+    // 6. Crear el repo
     let repo = &mut ctx.accounts.repo;
     repo.owner = payload.repo.owner;
     repo.name = payload.repo.name;
@@ -57,8 +62,8 @@ pub fn handler(ctx: Context<ProposeProject>, payload: ProposeProjectPayload) -> 
     repo.approved_timestamp = 0;
     repo.subscribers = 0;
 
-    // 6. Actualizar uso de BYTES
-    ctx.accounts.bytes_usage.last_bytes_use_ts = Clock::get()?.unix_timestamp;
+    // 7. Actualizar uso de BYTES
+    ctx.accounts.bytes_usage.last_bytes_use_ts = clock.unix_timestamp;
 
     Ok(())
 }
@@ -98,6 +103,15 @@ pub struct ProposeProject<'info> {
     )]
     pub bytes_usage: Account<'info, BytesUsage>,
 
+    #[account(
+        init_if_needed,
+        payer = publisher,
+        seeds = [b"reputation", publisher.key().as_ref()],
+        bump,
+        space = Reputation::SIZE,
+    )]
+    pub reputation: Account<'info, Reputation>,
+
     #[account(mut)]
     pub publisher: Signer<'info>,
 
@@ -106,6 +120,13 @@ pub struct ProposeProject<'info> {
 
     #[account(mut)]
     pub user_server_ata: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        associated_token::mint = server_mint,
+        associated_token::authority = admin.treasury_wallet
+    )]
+    pub treasury_server_ata: Account<'info, TokenAccount>,
 
     #[account(address = BYTES_MINT)]
     pub bytes_mint: Account<'info, anchor_spl::token::Mint>,

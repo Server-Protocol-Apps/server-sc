@@ -6,7 +6,7 @@ use crate::{state::{TeamVesting, Tokenomics}, utils::CustomError};
 #[derive(Accounts)]
 pub struct ClaimTeamTokens<'info> {
     #[account(mut)]
-    pub team_signer: Signer<'info>,
+    pub team_wallet: Signer<'info>,
 
     #[account(mut, seeds = [b"token"], bump)]
     pub token_mint: Account<'info, Mint>,
@@ -39,12 +39,12 @@ pub fn handler(ctx: Context<ClaimTeamTokens>) -> Result<()> {
     let mintable = ctx
         .accounts
         .tokenomics
-        .amount_to_mint_for_team(amount)
+        .amount_to_mint_for_team(&amount)
         .ok_or(CustomError::MaxSupplyExceeded)?;
 
     vesting.claimed = vesting.claimed.checked_add(mintable).ok_or(CustomError::Overflow)?;
 
-    let seeds = &[b"token", &[ctx.bumps.token_mint]];
+    let seeds: &[&[u8]] = &[b"token", &[ctx.bumps.token_mint]];
     let signer = &[&seeds[..]];
 
     mint_to(

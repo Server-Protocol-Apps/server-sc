@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{state::{Admin, TeamVesting}, utils::CustomError};
+use crate::state::{Admin, TeamVesting};
 
 #[derive(Accounts)]
 pub struct UpdateTeamWallet<'info> {

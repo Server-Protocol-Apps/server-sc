@@ -46,4 +46,16 @@ pub enum CustomError {
 
     #[msg("Nothing available to claim.")]
     NothingToClaim,
+
+    #[msg("Invalid vote weight. Must be between 100 and 10,000 BYTES.")]
+    InvalidVoteWeight,
+
+    #[msg("Invalid proposal amount. You must burn exactly 1,000,000 BYTES.")]
+    InvalidProposalAmount,
+
+    #[msg("Claim not allowed yet. Wait until next vesting period.")]
+    InvalidClaimTime,
+
+    #[msg("Insufficient staked amount")]
+    InsufficientStake,
 }

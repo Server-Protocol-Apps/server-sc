@@ -37,7 +37,7 @@ pub fn handler(ctx: Context<InitializeTeamVesting>, payload: InitializeVestingPa
     vesting.cliff_months = 3;
     vesting.total_months = 24;
     vesting.unlock_interval_months = 3;
-    vesting.bump = *ctx.bumps.get("team_vesting").unwrap();
+    vesting.bump = ctx.bumps.team_vesting;
 
     Ok(())
 }

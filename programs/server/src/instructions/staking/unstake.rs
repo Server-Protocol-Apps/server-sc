@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount, Transfer, transfer};
 
-use crate::state::Staking;
+use crate::{
+    state::Staking,
+    utils::CustomError,
+};
 
 #[derive(Accounts)]
 pub struct UnstakeTokens<'info> {
@@ -18,8 +21,12 @@ pub struct UnstakeTokens<'info> {
     #[account(mut)]
     pub staker_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
-    pub vault: Account<'info, TokenAccount>, // Donde se guardan los tokens stakeados
+    #[account(
+        mut,
+        seeds = [b"vault_token_account"],
+        bump,
+    )]
+    pub vault: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -27,14 +34,15 @@ pub struct UnstakeTokens<'info> {
 pub fn handler(ctx: Context<UnstakeTokens>, amount: u64) -> Result<()> {
     let staking = &mut ctx.accounts.staking_account;
 
-    require!(amount <= staking.amount_staked, ProgramError::InsufficientFunds);
+    require!(amount <= staking.amount_staked, CustomError::InsufficientStake);
+
 
     staking.amount_staked = staking
         .amount_staked
         .checked_sub(amount)
         .ok_or(ProgramError::InvalidArgument)?;
 
-    let vault_seeds = &[b"vault", &[ctx.bumps.get("vault").copied().unwrap_or_default()]];
+    let vault_seeds: &[&[u8]] = &[b"vault_token_account", &[ctx.bumps.vault]];
     let signer = &[&vault_seeds[..]];
 
     transfer(

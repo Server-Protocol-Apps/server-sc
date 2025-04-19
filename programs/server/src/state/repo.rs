@@ -48,19 +48,17 @@ impl Repo {
     }
 
     pub fn vote(&mut self, vote: &Vote) {
-        match vote.vote_type {
-            VoteType::Up => self.votes = self.votes.checked_add(1).unwrap(),
-            VoteType::Down => self.votes = self.votes.checked_sub(1).unwrap(),
-        }
+        let weight = match vote.vote_type {
+            VoteType::Up => vote.weight as i128,
+            VoteType::Down => -(vote.weight as i128),
+        };
+        self.votes = self.votes.checked_add(weight).unwrap();
         self.check_approve(vote.timestamp);
     }
 
-    pub fn change_vote(&mut self, vote: &Vote) {
-        match vote.vote_type {
-            VoteType::Up => self.votes = self.votes.checked_add(2).unwrap(),
-            VoteType::Down => self.votes = self.votes.checked_sub(2).unwrap(),
-        }
-        self.check_approve(vote.timestamp);
+    pub fn change_vote(&mut self, net_change: i128, timestamp: u128) {
+        self.votes = self.votes.checked_add(net_change).unwrap();
+        self.check_approve(timestamp);
     }
 
     pub fn update_total_claimed(&mut self, rewards: u128) {

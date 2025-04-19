@@ -1,18 +1,12 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, Mint, TokenAccount, InitializeAccount, initialize_account};
+use anchor_spl::token::{Token, Mint, TokenAccount};
+
+use crate::state::StakingConfig;
 
 #[derive(Accounts)]
 pub struct InitializeStaking<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
-
-    /// CHECK: No constraints needed, just initializing
-    #[account(
-        mut,
-        seeds = [b"vault"],
-        bump,
-    )]
-    pub vault_authority: UncheckedAccount<'info>,
 
     #[account(
         init,
@@ -20,7 +14,7 @@ pub struct InitializeStaking<'info> {
         seeds = [b"vault_token_account"],
         bump,
         token::mint = mint,
-        token::authority = vault_authority
+        token::authority = vault_token_account
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
 
@@ -42,7 +36,7 @@ pub struct InitializeStaking<'info> {
 
 pub fn handler(ctx: Context<InitializeStaking>) -> Result<()> {
     ctx.accounts.config.bytes_per_second_per_token = 100; // == 0.0000001
-    ctx.accounts.config.bump = *ctx.bumps.get("config").unwrap();
+    ctx.accounts.config.bump = ctx.bumps.config;
     msg!("Staking vault initialized");
     Ok(())
 }

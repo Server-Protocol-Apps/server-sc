@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::ProjectGrant, utils::CustomError};
+use crate::state::ProjectGrant;
 
 #[derive(Accounts)]
 #[instruction(repo_id: Pubkey)]
@@ -35,7 +35,7 @@ pub fn handler(ctx: Context<CreateGrant>, payload: CreateGrantPayload) -> Result
     grant.total_allocated = payload.total_allocated;
     grant.total_claimed = 0;
     grant.grant_round = 1;
-    grant.bump = *ctx.bumps.get("project_grant").ok_or(CustomError::MissingBump)?;
+    grant.bump = ctx.bumps.project_grant;
 
     Ok(())
 }

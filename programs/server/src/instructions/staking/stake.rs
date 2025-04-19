@@ -56,21 +56,25 @@ pub fn handler(ctx: Context<StakeTokens>, amount: u64) -> Result<()> {
         .amount_staked
         .checked_add(amount)
         .ok_or(ProgramError::InvalidArgument)?;
-    staking.bump = *ctx.bumps.get("staking_account").unwrap();
+    staking.bump = ctx.bumps.staking_account;
 
     if bytes_usage.last_bytes_use_ts == 0 {
         bytes_usage.user = ctx.accounts.staker.key();
         bytes_usage.last_bytes_use_ts = clock.unix_timestamp;
-        bytes_usage.bump = *ctx.bumps.get("bytes_usage").unwrap();
+        bytes_usage.bump = ctx.bumps.bytes_usage;
     }
 
-    let cpi_ctx = CpiContext::new(
+    let vault_seeds: &[&[u8]] = &[b"vault_token_account", &[ctx.bumps.vault]];
+    let signer = &[&vault_seeds[..]];
+
+    let cpi_ctx = CpiContext::new_with_signer(
         ctx.accounts.token_program.to_account_info(),
         Transfer {
             from: ctx.accounts.staker_token_account.to_account_info(),
             to: ctx.accounts.vault.to_account_info(),
             authority: ctx.accounts.staker.to_account_info(),
         },
+        signer,
     );
     transfer(cpi_ctx, amount)?;
 
