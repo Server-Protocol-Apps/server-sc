@@ -4,7 +4,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
-use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::DataV2};
+use mpl_token_metadata::instructions::CreateV1CpiBuilder;
 
 pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
     msg!("{:?}", payload.decimals);

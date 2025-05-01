@@ -5,20 +5,20 @@ pub mod instructions;
 pub mod state;
 pub mod utils;
 
-declare_id!("7dPueMoFZHG9Ae1GFX2FdVcZTjqFsvV6EhsUvW8Hhg8o");
+declare_id!("H7id2QU3PqykCwteMBAd4snZwBAgaNn78WPjFtQTQtJj");
 
 #[program]
 pub mod server {
-
     use super::*;
 
     pub fn add_repo(ctx: Context<AddRepo>, payload: AddRepoPayload) -> Result<()> {
         instructions::add_repo::add_repo(ctx, payload)
     }
 
-    pub fn vote_repo(ctx: Context<VoteRepo>, payload: VoteRepoPayload) -> Result<()> {
-        instructions::vote_repo::vote_repo(ctx, payload)
+    pub fn vote_repo<'info>(ctx: Context<'_, '_, 'info, 'info, VoteRepo<'info>>, payload: VoteRepoPayload) -> Result<()> {
+        instructions::github::vote_repo::handler(ctx, payload)
     }
+    
 
     pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
         instructions::init::init(ctx, payload)
@@ -32,8 +32,12 @@ pub mod server {
         instructions::subscribe::subscribe(ctx, payload)
     }
 
-    pub fn propose_project(ctx: Context<ProposeProject>, payload: ProposeProjectPayload) -> Result<()> {
-        instructions::github::propose_project::handler(ctx, payload)
+    pub fn initialize_repo_account(ctx: Context<InitializeRepoAccount>, payload: InitializeRepoPayload) -> Result<()> {
+        instructions::github::initialize_repo_account::handler(ctx, payload)
+    }
+    
+    pub fn finalize_project_proposal(ctx: Context<FinalizeProjectProposal>) -> Result<()> {
+        instructions::github::finalize_project_proposal::handler(ctx)
     }
 
     // ADMIN
@@ -50,7 +54,7 @@ pub mod server {
         instructions::claim_team_tokens::handler(ctx)
     }
 
-    pub fn create_grant(ctx: Context<CreateGrant>, payload: CreateGrantPayload, repo_id: Pubkey) -> Result<()> {
+    pub fn create_grant(ctx: Context<CreateGrant>, payload: CreateGrantPayload) -> Result<()> {
         instructions::create_grant::handler(ctx, payload)
     }
     
@@ -72,6 +76,10 @@ pub mod server {
 
     pub fn set_treasury_wallet(ctx: Context<SetTreasuryWallet>, new_wallet: Pubkey) -> Result<()> {
         instructions::set_treasury_wallet::handler(ctx, new_wallet)
+    }
+
+    pub fn mint_misc_tokens(ctx: Context<MintMiscTokens>, payload: MintMiscPayload) -> Result<()> {
+        mint_misc_tokens::handler(ctx, payload)
     }
 
     // STAKING

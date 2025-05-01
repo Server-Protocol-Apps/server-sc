@@ -11,11 +11,12 @@ pub struct Tokenomics {
 
     pub current_rewarded_supply: u64,
     pub current_team_supply: u64,
+    pub current_misc_supply: u64,
 }
 
 impl Tokenomics {
     pub fn size() -> usize {
-        8 + 1 + 1 + 1 + 8 + 8 + 8
+        8 + 1 + 1 + 1 + 8 + 8 + 8 + 8
     }
 
     pub fn init(&mut self, bump: u8, payload: &InitPayload) {
@@ -27,6 +28,7 @@ impl Tokenomics {
 
         self.current_rewarded_supply = 0;
         self.current_team_supply = 0;
+        self.current_misc_supply = 0;
     }
 
     pub fn max_rewards_supply(&self) -> u64 {

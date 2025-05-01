@@ -29,7 +29,7 @@ pub struct InitializeBytesMint<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<InitializeBytesMint>) -> Result<()> {
+pub fn handler(_ctx: Context<InitializeBytesMint>) -> Result<()> {
     msg!("✅ Mint de $BYTES creado exitosamente");
     Ok(())
 }

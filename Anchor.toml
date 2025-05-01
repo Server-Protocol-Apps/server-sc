@@ -5,9 +5,9 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-server = "7dPueMoFZHG9Ae1GFX2FdVcZTjqFsvV6EhsUvW8Hhg8o"
+server = "H7id2QU3PqykCwteMBAd4snZwBAgaNn78WPjFtQTQtJj"
 [programs.devnet]
-server = "7dPueMoFZHG9Ae1GFX2FdVcZTjqFsvV6EhsUvW8Hhg8o"
+server = "H7id2QU3PqykCwteMBAd4snZwBAgaNn78WPjFtQTQtJj"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"

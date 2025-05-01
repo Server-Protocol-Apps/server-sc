@@ -1,6 +1,6 @@
 use crate::borsh;
 use anchor_lang::{AnchorDeserialize, AnchorSerialize};
-use solana_program::{
+use anchor_lang::solana_program::{
     blake3::HASH_BYTES,
     keccak, msg,
     secp256k1_recover::{secp256k1_recover, Secp256k1Pubkey},

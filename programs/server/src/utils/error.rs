@@ -23,39 +23,48 @@ pub enum CustomError {
     #[msg("Invalid user")]
     InvalidUser,
 
-    #[msg("Unauthorized action.")]
+    #[msg("Unauthorized action")]
     Unauthorized,
 
-    #[msg("Grant allocation exceeded.")]
+    #[msg("Grant allocation exceeded")]
     GrantExceeded,
 
-    #[msg("Invalid grant update.")]
+    #[msg("Invalid grant update")]
     InvalidGrantUpdate,
 
-    #[msg("Rewards supply exceeded.")]
+    #[msg("Rewards supply exceeded")]
     RewardsSupplyExceeded,
 
-    #[msg("Missing bump seed.")]
+    #[msg("Missing bump seed")]
     MissingBump,
 
-    #[msg("Arithmetic overflow.")]
+    #[msg("Arithmetic overflow")]
     Overflow,
 
-    #[msg("Total percentage is invalid.")]
+    #[msg("Total percentage is invalid")]
     InvalidPercentageTotal,
 
-    #[msg("Nothing available to claim.")]
+    #[msg("Nothing available to claim")]
     NothingToClaim,
 
-    #[msg("Invalid vote weight. Must be between 100 and 10,000 BYTES.")]
+    #[msg("Invalid vote weight. Must be between 100 and 10,000 BYTES")]
     InvalidVoteWeight,
 
-    #[msg("Invalid proposal amount. You must burn exactly 1,000,000 BYTES.")]
+    #[msg("Invalid proposal amount. You must burn exactly 1,000,000 BYTES")]
     InvalidProposalAmount,
 
-    #[msg("Claim not allowed yet. Wait until next vesting period.")]
+    #[msg("Claim not allowed yet. Wait until next vesting period")]
     InvalidClaimTime,
 
     #[msg("Insufficient staked amount")]
     InsufficientStake,
+
+    #[msg("Invalid treasury account")]
+    InvalidTreasuryAccount,
+
+    #[msg("Invalid number of remaining accounts")]
+    InvalidRemainingAccounts,
+
+    #[msg("Amount not allowed. It exceeds supply")]
+    ExceedsAvailableSupply
 }

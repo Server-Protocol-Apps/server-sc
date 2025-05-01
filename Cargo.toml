@@ -6,8 +6,12 @@ resolver = "2"
 
 [profile.release]
 overflow-checks = true
-lto = "fat"
+lto = true
 codegen-units = 1
+opt-level = "z"
+panic = "abort"
+strip = true      
+
 [profile.release.build-override]
 opt-level = 3
 incremental = false
