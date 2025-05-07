@@ -31,10 +31,6 @@ pub mod server {
     pub fn subscribe(ctx: Context<Subscribe>, payload: SubscribePayload) -> Result<()> {
         instructions::subscribe::subscribe(ctx, payload)
     }
-
-    pub fn initialize_repo_account(ctx: Context<InitializeRepoAccount>, payload: InitializeRepoPayload) -> Result<()> {
-        instructions::github::initialize_repo_account::handler(ctx, payload)
-    }
     
     pub fn finalize_project_proposal(ctx: Context<FinalizeProjectProposal>) -> Result<()> {
         instructions::github::finalize_project_proposal::handler(ctx)

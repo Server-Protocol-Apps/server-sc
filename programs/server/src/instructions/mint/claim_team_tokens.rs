@@ -16,7 +16,7 @@ pub struct ClaimTeamTokens<'info> {
 
     #[account(
         mut,
-        seeds = [b"vesting"],
+        seeds = [b"vesting", team_wallet.key().as_ref()],
         bump = team_vesting.bump,
         has_one = team_wallet @ CustomError::Unauthorized,
     )]
