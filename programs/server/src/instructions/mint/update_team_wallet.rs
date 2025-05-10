@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use crate::state::{Admin, TeamVesting};
 
 #[derive(Accounts)]
+#[instruction(team_wallet: Pubkey)]
 pub struct UpdateTeamWallet<'info> {
     #[account(mut)]
     pub admin_signer: Signer<'info>,
@@ -14,7 +15,7 @@ pub struct UpdateTeamWallet<'info> {
 
     #[account(
         mut,
-        seeds = [b"vesting"],
+        seeds = [b"vesting", team_wallet.as_ref()],
         bump = team_vesting.bump,
     )]
     pub team_vesting: Account<'info, TeamVesting>,

@@ -35,7 +35,7 @@ pub struct InitializeStaking<'info> {
 }
 
 pub fn handler(ctx: Context<InitializeStaking>) -> Result<()> {
-    ctx.accounts.config.bytes_per_second_per_token = 100; // == 0.0000001
+    ctx.accounts.config.bytes_per_second_per_token = 1000; // == 0.000001
     ctx.accounts.config.bump = ctx.bumps.config;
     msg!("Staking vault initialized");
     Ok(())

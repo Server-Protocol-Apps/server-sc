@@ -13,7 +13,7 @@ pub struct TeamVesting {
 }
 
 impl TeamVesting {
-    pub const SIZE: usize = 8 + 32 + 8 + 8 + 1 + 1 + 1 + 1;
+    pub const SIZE: usize = 8 + 32 + 8 + 8 + 8 + 1 + 1 + 1 + 1;
 
     pub fn available_to_claim(&self, current_time: i64) -> u64 {
         // let cliff_end = self.start_time + (self.cliff_months as i64 * 30 * 24 * 60 * 60);

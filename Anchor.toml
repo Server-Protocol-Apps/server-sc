@@ -5,9 +5,9 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-server = "H7id2QU3PqykCwteMBAd4snZwBAgaNn78WPjFtQTQtJj"
+server = "Fsu6n9RF3iArMZLtznidt4rG12meWzXSa7K9HCFp3EPS"
 [programs.devnet]
-server = "H7id2QU3PqykCwteMBAd4snZwBAgaNn78WPjFtQTQtJj"
+server = "9SpKJrMYXun6oySofVqqPwXQhdm3C9AUJxs7BFT265tc"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -18,8 +18,8 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "devnet"
-wallet = "~/.config/solana/id.json"
+wallet = "wallets/admin.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-
+initialize = "ts-node scripts/initialize.ts"

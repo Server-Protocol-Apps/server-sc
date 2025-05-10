@@ -62,6 +62,14 @@ pub struct InitToken<'info> {
     pub admin: Signer<'info>,
     #[account(
         init,
+        space=Admin::LEN,
+        payer=admin,
+        seeds=[b"ADMIN"],
+        bump,
+      )]
+      pub admin_info: Account<'info, Admin>,
+    #[account(
+        init,
         seeds=[b"token"],
         bump,
         payer=admin,
@@ -77,14 +85,7 @@ pub struct InitToken<'info> {
         space = Tokenomics::size(),
     )]
     pub tokenomics: Account<'info, Tokenomics>,
-    #[account(
-      init,
-      space = Admin::LEN,
-      payer = admin,
-      seeds = [b"ADMIN"],
-      bump,
-    )]
-    pub admin_info: Account<'info, Admin>,
+
     /// CHECK: New Metaplex Account being created
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,

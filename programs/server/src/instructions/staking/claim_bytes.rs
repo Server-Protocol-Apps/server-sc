@@ -44,6 +44,10 @@ pub struct ClaimBytes<'info> {
     )]
     pub user_bytes_ata: Account<'info, TokenAccount>,
 
+    /// CHECK: This is a PDA mint authority derived from [b"bytes_mint"], verified in the instruction
+    #[account(seeds = [b"bytes_mint"], bump)]
+    pub mint_authority: UncheckedAccount<'info>,
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, anchor_spl::associated_token::AssociatedToken>,
@@ -82,7 +86,7 @@ pub fn handler(ctx: Context<ClaimBytes>) -> Result<()> {
             MintTo {
                 mint: ctx.accounts.bytes_mint.to_account_info(),
                 to: ctx.accounts.user_bytes_ata.to_account_info(),
-                authority: ctx.accounts.bytes_mint.to_account_info(),
+                authority: ctx.accounts.mint_authority.to_account_info(),
             },
             signer,
         ),

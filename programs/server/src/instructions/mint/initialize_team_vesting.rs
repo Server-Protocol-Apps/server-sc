@@ -34,7 +34,7 @@ pub fn handler(ctx: Context<InitializeTeamVesting>, payload: InitializeVestingPa
     // ✅ WHITELIST DE WALLETS PERMITIDAS
     let allowed_wallets = vec![
         Pubkey::from_str("26zefaaRq7mcrkwPcssPALtJkoNGYSSBpWJTGxyqwiuo").unwrap(),
-        Pubkey::from_str("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB").unwrap(),
+        Pubkey::from_str("Htk12Mz2YoJqwoK2xh2P8NJqznzjNbteKfvC7RyQogoZ").unwrap(),
     ];
 
     require!(

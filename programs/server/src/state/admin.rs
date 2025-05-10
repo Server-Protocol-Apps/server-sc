@@ -10,7 +10,7 @@ pub struct Admin {
 }
 
 impl Admin {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 32; // actualizado (discriminator + 4 pubkeys)
+    pub const LEN: usize = 8 + 32 + 64 + 32 + 32; // actualizado (discriminator + 4 pubkeys)
 
     pub fn set_signer(&mut self, signer: Pubkey) {
         self.signer = signer;
