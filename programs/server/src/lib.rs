@@ -5,7 +5,10 @@ pub mod instructions;
 pub mod state;
 pub mod utils;
 
-declare_id!("9SpKJrMYXun6oySofVqqPwXQhdm3C9AUJxs7BFT265tc");
+// pub mod constants; // Comentado porque el archivo no existe en este commit
+// pub mod error;     // Comentado porque el archivo no existe en este commit
+
+declare_id!("CAGUwmP7JinRGYZtD5i5oM3UwP2XGNCKj7s5pCmdUogs");
 
 #[program]
 pub mod server {

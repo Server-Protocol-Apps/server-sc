@@ -31,9 +31,11 @@ pub struct ClaimBytes<'info> {
     pub bytes_usage: Account<'info, BytesUsage>,
 
     #[account(
-        mut,
-        seeds = [b"bytes_mint"],
-        bump
+        mut
+        // Ya no se deriva con seeds, se asume que es la cuenta de Mint correcta.
+        // La autoridad se verifica a través de mint_authority PDA usada en mint_to.
+        // seeds = [b"bytes_mint"],
+        // bump
     )]
     pub bytes_mint: Account<'info, Mint>,
 
@@ -77,7 +79,7 @@ pub fn handler(ctx: Context<ClaimBytes>) -> Result<()> {
     let final_amount = (base_amount * penalty_multiplier as u128) / 100;
 
     // Mint de BYTES
-    let seeds: &[&[u8]] = &[b"bytes_mint", &[ctx.bumps.bytes_mint]];
+    let seeds: &[&[u8]] = &[b"bytes_mint", &[ctx.bumps.mint_authority]];
     let signer = &[&seeds[..]];
 
     mint_to(

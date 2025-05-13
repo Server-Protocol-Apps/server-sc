@@ -7,11 +7,11 @@ skip-lint = false
 [programs.localnet]
 server = "Fsu6n9RF3iArMZLtznidt4rG12meWzXSa7K9HCFp3EPS"
 [programs.devnet]
-server = "9SpKJrMYXun6oySofVqqPwXQhdm3C9AUJxs7BFT265tc"
+server = "CAGUwmP7JinRGYZtD5i5oM3UwP2XGNCKj7s5pCmdUogs"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-program = "./metadata.so"
+program = "./tests/artifacts/mpl_token_metadata.so"
 
 [registry]
 url = "https://api.apr.dev"
@@ -22,4 +22,7 @@ wallet = "wallets/admin.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-initialize = "ts-node scripts/initialize.ts"
+initialize = "yarn run ts-node scripts/initialize.ts"
+
+[test]
+startup_wait = 20000 # Esperar 20 segundos para que el validador se inicie
