@@ -57,6 +57,8 @@ pub struct ClaimBytes<'info> {
 }
 
 pub fn handler(ctx: Context<ClaimBytes>) -> Result<()> {
+    const SERVER_TOKEN_DECIMALS: u32 = 9; // Definir decimales del token $SERVER
+
     let staking = &mut ctx.accounts.staking_account;
     let config = &ctx.accounts.config;
     let bytes_usage = &ctx.accounts.bytes_usage;
@@ -64,19 +66,49 @@ pub fn handler(ctx: Context<ClaimBytes>) -> Result<()> {
     let now = clock.unix_timestamp;
 
     // Tiempo desde último claim
-    let elapsed = now - staking.last_claim_ts;
+    // Usar checked_sub para evitar pánico si last_claim_ts > now, aunque require! lo cubre.
+    let elapsed = now.checked_sub(staking.last_claim_ts)
+        .ok_or_else(|| error!(CustomError::InvalidClaimTime))?; // O un error más específico si es negativo.
     require!(elapsed > 0, CustomError::InvalidClaimTime);
 
-    // Emisión base (sin penalización)
-    let base_amount: u128 = staking.amount_staked as u128
-        * config.bytes_per_second_per_token as u128
-        * elapsed as u128;
+    // Convertir amount_staked (unidades mínimas de $SERVER) a unidades completas
+    let amount_staked_minimal_u128 = staking.amount_staked as u128;
+    let divisor_server_decimals = 10u128.checked_pow(SERVER_TOKEN_DECIMALS)
+        .ok_or_else(|| error!(CustomError::Overflow))?; // Usar CustomError::Overflow
+    
+    require!(divisor_server_decimals > 0, CustomError::Overflow); // Usar CustomError::Overflow
+
+    let amount_staked_full_units_u128 = amount_staked_minimal_u128
+        .checked_div(divisor_server_decimals)
+        .ok_or_else(|| error!(CustomError::Overflow))?;
+
+    // Calcular emisión base (unidades mínimas de $BYTES)
+    // base_amount = (full_$SERVER_staked) * (minimal_$BYTES_per_sec_per_full_$SERVER) * (elapsed_seconds)
+    let base_amount_u128 = amount_staked_full_units_u128
+        .checked_mul(config.bytes_per_second_per_token as u128)
+        .ok_or_else(|| error!(CustomError::Overflow))?
+        .checked_mul(elapsed as u128) // elapsed ya es i64, y se verificó > 0
+        .ok_or_else(|| error!(CustomError::Overflow))?;
 
     // Cálculo de penalización
-    let since_last_use = now - bytes_usage.last_bytes_use_ts;
-    let penalty_multiplier = calculate_penalty_multiplier(since_last_use);
+    // Usar unwrap_or(0) para since_last_use si now < last_bytes_use_ts para evitar pánico,
+    // aunque la lógica de penalty_multiplier debería manejarlo.
+    let since_last_use = now.checked_sub(bytes_usage.last_bytes_use_ts).unwrap_or(0); 
+    let penalty_multiplier = calculate_penalty_multiplier(since_last_use); // u64 (0-100)
 
-    let final_amount = (base_amount * penalty_multiplier as u128) / 100;
+    // Aplicar penalización
+    let final_amount_intermediate_u128 = base_amount_u128
+        .checked_mul(penalty_multiplier as u128)
+        .ok_or_else(|| error!(CustomError::Overflow))?;
+    
+    // Asegurarse de que el divisor (100) no sea cero, aunque es constante.
+    let final_amount_u128 = final_amount_intermediate_u128
+        .checked_div(100) 
+        .ok_or_else(|| error!(CustomError::Overflow))?;
+
+    // Convertir de forma segura a u64 para mint_to
+    let amount_to_mint_u64 = u64::try_from(final_amount_u128)
+        .map_err(|_| error!(CustomError::Overflow))?; // Usar CustomError::Overflow
 
     // Mint de BYTES
     let seeds: &[&[u8]] = &[b"bytes_mint", &[ctx.bumps.mint_authority]];
@@ -92,7 +124,7 @@ pub fn handler(ctx: Context<ClaimBytes>) -> Result<()> {
             },
             signer,
         ),
-        final_amount as u64,
+        amount_to_mint_u64,
     )?;
 
     // Actualización de timestamps

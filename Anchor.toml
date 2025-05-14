@@ -7,7 +7,7 @@ skip-lint = false
 [programs.localnet]
 server = "Fsu6n9RF3iArMZLtznidt4rG12meWzXSa7K9HCFp3EPS"
 [programs.devnet]
-server = "CAGUwmP7JinRGYZtD5i5oM3UwP2XGNCKj7s5pCmdUogs"
+server = "CDXwSVQSpQU5Dc8ivxbZAvd7DEJrxEy6bh8XS3u9mGQV"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"

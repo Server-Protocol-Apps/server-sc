@@ -8,7 +8,7 @@ pub mod utils;
 // pub mod constants; // Comentado porque el archivo no existe en este commit
 // pub mod error;     // Comentado porque el archivo no existe en este commit
 
-declare_id!("CAGUwmP7JinRGYZtD5i5oM3UwP2XGNCKj7s5pCmdUogs");
+declare_id!("CDXwSVQSpQU5Dc8ivxbZAvd7DEJrxEy6bh8XS3u9mGQV");
 
 #[program]
 pub mod server {
@@ -17,6 +17,7 @@ pub mod server {
     // ADMIN
 
     pub fn init(ctx: Context<InitToken>, payload: InitPayload) -> Result<()> {
+        // msg!("Program ID at runtime (from declare_id!): {}", ID); // Comentado
         instructions::admin::init::init(ctx, payload)
     }
 
@@ -30,6 +31,10 @@ pub mod server {
 
     pub fn set_treasury_wallet(ctx: Context<SetTreasuryWallet>, new_wallet: Pubkey) -> Result<()> {
         instructions::admin::set_treasury_wallet::handler(ctx, new_wallet)
+    }
+
+    pub fn admin_reset_team_supply(ctx: Context<AdminResetTeamSupply>) -> Result<()> {
+        instructions::admin::admin_reset_team_supply::handler(ctx)
     }
 
     // GITHUB
@@ -125,9 +130,9 @@ pub mod server {
 
     // BYTES
 
-    pub fn initialize_bytes_mint(ctx: Context<InitializeBytesMint>) -> Result<()> {
-        instructions::bytes::initialize_bytes_mint::handler(ctx)
-    }
+    // pub fn initialize_bytes_mint(ctx: Context<InitializeBytesMint>) -> Result<()> { // Comentada
+    //     instructions::bytes::initialize_bytes_mint::handler(ctx)
+    // }
 
     // REPUTATION
 

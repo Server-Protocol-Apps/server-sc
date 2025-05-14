@@ -33,17 +33,17 @@ impl Tokenomics {
 
     pub fn max_rewards_supply(&self) -> u64 {
         self.total_supply
-            .checked_mul(self.rewards_percentage as u64)
-            .unwrap()
             .checked_div(100)
+            .unwrap()
+            .checked_mul(self.rewards_percentage as u64)
             .unwrap()
     }
 
     pub fn max_team_supply(&self) -> u64 {
         self.total_supply
-            .checked_mul(self.team_percentage as u64)
-            .unwrap()
             .checked_div(100)
+            .unwrap()
+            .checked_mul(self.team_percentage as u64)
             .unwrap()
     }
 
@@ -60,9 +60,8 @@ impl Tokenomics {
         let new_supply = amount_to_mint.checked_add(*current_supply).unwrap();
         if new_supply > *max_supply {
             let diff = max_supply
-                .checked_sub(self.current_rewarded_supply)
+                .checked_sub(*current_supply)
                 .unwrap();
-            msg!("diff {:?}", diff);
             return Some(diff);
         }
 
@@ -70,8 +69,10 @@ impl Tokenomics {
     }
 
     pub fn amount_to_mint_for_team(&mut self, amount: &u64) -> Option<u64> {
+        let max_team_s = self.max_team_supply();
+
         let amount_to_mint = self.check_max_supply_exceeded(
-            &self.max_team_supply(),
+            &max_team_s,
             &self.current_team_supply,
             amount,
         );

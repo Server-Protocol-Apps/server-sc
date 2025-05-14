@@ -3,14 +3,14 @@ use crate::state::TeamVesting;
 use std::str::FromStr;
 
 #[derive(Accounts)]
-#[instruction(team_wallet: Pubkey)]
+#[instruction(payload: InitializeVestingPayload)]
 pub struct InitializeTeamVesting<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
     #[account(
-        init,
-        seeds = [b"vesting", team_wallet.as_ref()],
+        init_if_needed,
+        seeds = [b"vesting", payload.team_wallet.as_ref()],
         bump,
         payer = admin,
         space = TeamVesting::SIZE,
@@ -21,7 +21,7 @@ pub struct InitializeTeamVesting<'info> {
     pub clock: Sysvar<'info, Clock>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct InitializeVestingPayload {
     pub team_wallet: Pubkey,
     pub total_allocation: u64,
@@ -47,14 +47,10 @@ pub fn handler(ctx: Context<InitializeTeamVesting>, payload: InitializeVestingPa
     vesting.claimed = 0;
     vesting.start_time = now;
 
-    // vesting.cliff_months = 3;
-    // vesting.total_months = 24;
-    // vesting.unlock_interval_months = 3;
-
     // ⏳ TEMPORALMENTE: CLIFF DE 48 HORAS
-    vesting.cliff_months = 0; // ← será ignorado
-    vesting.total_months = 2; // ← valor temporal irrelevante
-    vesting.unlock_interval_months = 0; // ← ignorado
+    vesting.cliff_months = 0;
+    vesting.total_months = 2;
+    vesting.unlock_interval_months = 1;
 
     vesting.bump = ctx.bumps.team_vesting;
 
