@@ -8,3 +8,5 @@ test-ledger
 .env
 scripts/*
 wallets/*
+*.code-workspace
+program-keypair.json

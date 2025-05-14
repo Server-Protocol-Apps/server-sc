@@ -33,10 +33,6 @@ pub mod server {
         instructions::admin::set_treasury_wallet::handler(ctx, new_wallet)
     }
 
-    pub fn admin_reset_team_supply(ctx: Context<AdminResetTeamSupply>) -> Result<()> {
-        instructions::admin::admin_reset_team_supply::handler(ctx)
-    }
-
     // GITHUB
 
     pub fn add_repo(ctx: Context<AddRepo>, payload: AddRepoPayload) -> Result<()> {

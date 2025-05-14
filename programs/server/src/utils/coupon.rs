@@ -7,6 +7,7 @@ use anchor_lang::solana_program::{
 };
 
 use super::CustomError;
+use hex;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug, Clone)]
 pub struct Coupon {
@@ -19,23 +20,21 @@ impl Coupon {
         msg!("Coupon validation temporarily bypassed for testing");
         return Ok(());
 
+        // --- Original verification logic (comentado para pruebas) ---
         // msg!("Validating coupon");
         // let hash = self.hash(serialized_data);
 
-        // let signature_bytes = &hex::decode(&self.signature)
-        //     .map_err(|e| {
-        //         msg!("Failed to decode signature: {:?}", e);
-        //         CustomError::InvalidCoupon 
-        //     })?;
+        // // Decodificar la firma (hex string -> bytes)
+        // let signature_bytes = hex::decode(&self.signature).map_err(|_e| CustomError::InvalidCoupon)?;
 
-        // let recovered_pubkey: Secp256k1Pubkey = secp256k1_recover(&hash, self.recovery_id, signature_bytes)
-        //     .map_err(|e| {
-        //         msg!("Failed to recover pubkey from signature: {:?}", e);
-        //         CustomError::InvalidSignature
-        //     })?;
-        
+        // // Recuperar la pubkey secp256k1 a partir del hash y la firma
+        // let recovered_pubkey: Secp256k1Pubkey =
+        //     secp256k1_recover(&hash, self.recovery_id, &signature_bytes)
+        //         .map_err(|_e| CustomError::InvalidCoupon)?;
+
+        // // Comparar con la pubkey del backend
         // if recovered_pubkey.0.ne(be) {
-        //     msg!("Invalid coupon: Recovered pubkey does not match backend pubkey");
+        //     msg!("Invalid coupon");
         //     return Err(CustomError::InvalidCoupon);
         // }
         // msg!("Valid coupon");
